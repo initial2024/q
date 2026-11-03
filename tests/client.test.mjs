@@ -3,66 +3,122 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
-const file=readFileSync(new URL('../lib/client.js',import.meta.url),'utf8');
-const manifest=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
-test('the official 0.5.5 QR/settings frontend is bundled, remapped and declared',()=>{
-  assert.equal(manifest.version,'0.1.1');
-  assert.equal(manifest.exports['./client'],'./lib/client.js');
-  assert.equal(manifest.dsh.client.platform,'web');
-  assert.ok(manifest.files.includes('lib/client.js'));
-  assert.ok(manifest.files.includes('THIRD_PARTY_LICENSE_TENCENT.txt'));
-  assert.match(file,/id: "dsh-qqbot-q-mobile"/);
-  assert.match(file,/const PACKAGE_NAME = "dsh-qqbot-q-mobile"/);
-  assert.match(file,/const inject = \["slots"\]/);
-  assert.match(file,/\/qqbot\/im-qqbot\/bind/);
-  assert.match(file,/\/qqbot\/im-qqbot\/bind\/manual/);
-  assert.match(file,/settings\.section/);
-  assert.match(file,/plugins\.detail\.actions/);
-  assert.match(file,/QQ 机器人/);
-  assert.match(file,/手动填写/);
-  assert.ok(!file.includes('window.__ModuleLoader__.load({\n\tid: "@tencent-connect/dsh-qqbot"'));
-});
-test('real official UI registers Android settings with slots alone',()=>{
-  let loaderId,client;
-  const window={
-    __ModuleLoader__:{load(module){
-      loaderId=module.id;
-      client=module.factory(name=>{
+const code=readFileSync(new URL('../lib/client.js',import.meta.url),'utf8');
+const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+function loadOfficialClient(){
+  let id,client;
+  const sandbox={
+    window:{__ModuleLoader__:{load(value){
+      id=value.id;
+      client=value.factory(name=>{
         if(name==='react')return {};
-        throw Error('UNEXPECTED_CLIENT_DEPENDENCY_'+name);
+        throw Error('UNKNOWN_BROWSER_REQUIRE_'+name);
       });
-    }}
+    }}},
+    console,
+    setTimeout,clearTimeout
   };
-  // The official UI bundle must remain browser-loadable even when the
-  // desktop sidebar services are absent. No DSH agents/auth/network mocked.
-  runInNewContext(file,{window,console,setTimeout,clearTimeout});
-  assert.equal(loaderId,'dsh-qqbot-q-mobile');
+  runInNewContext(code,sandbox);
+  return {id,client};
+}
+test('bundle contains official QR/settings and Tencent copyright',()=>{
+  assert.equal(pkg.version,'0.1.2');
+  assert.equal(pkg.exports['./client'],'./lib/client.js');
+  assert.equal(pkg.dsh.client.platform,'web');
+  assert.deepEqual(pkg.dsh.client.inject,[]);
+  assert.equal(pkg.dependencies['@tencent-connect/dsh-qqbot'],'0.5.5');
+  assert.ok(pkg.files.includes('lib/client.js'));
+  assert.ok(pkg.files.includes('THIRD_PARTY_LICENSE_TENCENT.txt'));
+  assert.match(code,/id: "dsh-qqbot-q-mobile"/);
+  assert.match(code,/const PACKAGE_NAME = "dsh-qqbot-q-mobile"/);
+  assert.match(code,/const inject = \[\]/);
+  assert.match(code,/\/qqbot\/im-qqbot\/bind\/refresh/);
+  assert.match(code,/\/qqbot\/im-qqbot\/bind\/manual/);
+  assert.match(code,/settings\.section/);
+  assert.match(code,/plugins\.detail\.actions/);
+  assert.match(code,/QQ 机器人/);
+  assert.match(code,/手动填写/);
+  assert.ok(!code.includes('id: "@tencent-connect/dsh-qqbot"'));
+});
+test('MISSING slots at startup does NOT block DSH web boot',()=>{
+  const {id,client}=loadOfficialClient();
+  assert.equal(id,'dsh-qqbot-q-mobile');
   assert.equal(client.name,'im-qqbot-client');
-  assert.deepEqual(Array.from(client.inject),['slots']);
-  const registered=[];
+  assert.deepEqual(Array.from(client.inject),[]);
+  const requests=[];
+  let installSlots;
+  const outer=new Proxy({
+    inject(deps,callback){
+      requests.push(Array.from(deps));
+      installSlots=callback;
+    }
+  },{get(target,key){
+    if(['slots','sidebarRight','sidebarRightTabs'].includes(key))
+      throw Error('cannot get property '+String(key)+' without inject');
+    return target[key];
+  }});
+  assert.doesNotThrow(()=>client.apply(outer));
+  assert.deepEqual(requests,[['slots']]);
+  assert.equal(typeof installSlots,'function');
+  // No UI services were registered. Web boot is not waiting for slots.
+});
+test('DEFERRED real slots service registers QQ settings + plugin-detail action',()=>{
+  const {client}=loadOfficialClient();
+  let installSlots;
+  const registered=[],delayed=[];
+  client.apply({inject(deps,fn){
+    assert.deepEqual(Array.from(deps),['slots']);
+    installSlots=fn;
+  }});
+  assert.equal(registered.length,0);
+  assert.equal(typeof installSlots,'function');
   const slots={
-    inject(name,cb){const off=cb();return typeof off==='function'?off:()=>{};},
-    register(spec,view){registered.push({spec,view});return ()=>{};}
+    inject(_name,handler){
+      const result=handler();
+      return typeof result==='function'?result:()=>{};
+    },
+    register(spec,component){
+      registered.push({spec,component});
+      return ()=>{};
+    }
   };
-  const ctx={
+  const scope={
     slots,
-    effect(){}, // host disposal API
-    inject(_deps,fn){fn({slots,layout:{selectPanel(){}}});}
+    effect(){},
+    inject(deps,fn){
+      const list=Array.from(deps);
+      if(list.length===2 && list[0]==='sidebarRight' && list[1]==='sidebarRightTabs'){
+        // Android can legitimately omit both desktop sidebar services.
+        delayed.push({kind:'sidebar',callback:fn});
+        return;
+      }
+      if(list.length===1 && list[0]==='layout'){
+        fn({slots,layout:{selectPanel(){}}});
+        return;
+      }
+      throw Error('UNKNOWN_INJECT_'+list.join(','));
+    }
   };
-  client.apply(ctx);
+  assert.doesNotThrow(()=>installSlots(scope));
   const settings=registered.find(x=>x.spec.name==='settings.section');
   assert.equal(settings.spec.id,'qqbot');
   assert.equal(settings.spec.label,'QQ 机器人');
-  assert.equal(typeof settings.view,'function');
+  assert.equal(typeof settings.component,'function');
   assert.ok(registered.some(x=>x.spec.name==='plugins.detail.actions'));
   assert.ok(registered.some(x=>x.spec.name==='main'));
   assert.ok(registered.some(x=>x.spec.name==='sidebar.panellist'));
+  assert.equal(delayed.length,1); // Optional, must NOT hold settings hostage
 });
-test('copyright and original license preserved in built distribution',()=>{
+test('missing injection implementation and missing slots are fail-open for APP boot',()=>{
+  const {client}=loadOfficialClient();
+  assert.doesNotThrow(()=>client.apply({}));
+  assert.doesNotThrow(()=>client.apply({inject(){throw Error('host temporarily unavailable')}}));
+});
+test('official MIT license and nonofficial derivative attribution packaged',()=>{
   const license=readFileSync(new URL('../THIRD_PARTY_LICENSE_TENCENT.txt',import.meta.url),'utf8');
-  assert.match(license,/Copyright \(c\) 2026 Tencent Connect/);
   assert.match(license,/MIT License/);
-  const notice=readFileSync(new URL('../THIRD_PARTY_NOTICES.md',import.meta.url),'utf8');
-  assert.match(notice,/非官方/);
-  assert.match(notice,/v0.1.1/);
+  assert.match(license,/Copyright \(c\) 2026 Tencent Connect/);
+  const notices=readFileSync(new URL('../THIRD_PARTY_NOTICES.md',import.meta.url),'utf8');
+  assert.match(notices,/非官方/);
+  assert.match(notices,/v0\.1\.2/);
 });

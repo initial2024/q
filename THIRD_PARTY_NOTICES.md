@@ -54,3 +54,13 @@ AppSecret、令牌、二维码票据、QQ 数据写入 GitHub、提交日志或�
 未改动腾讯官方 QQ Bot 的扫码/手动绑定页面、鉴权流程、API 路由、
 AppID/AppSecret 持久化、SDK、消息发送、限流和安全规则。这个版本
 不是腾讯官方发行，也没有获得腾讯任何形式的产品认证。
+
+## v0.1.2 Android Web boot 兼容修复
+
+本版在保持腾讯官方 0.5.5 SDK、QQ 鉴权、扫码/手动配置 API 路径和
+凭据存储逻辑原样不动的前提下，调整浏览器侧 Cordis 依赖声明和
+注册时机：顶层无依赖，官方 UI 在 `slots` 服务就绪后延迟加载，
+桌面侧栏为可选。官方原始编译客户端经固定锚点补丁生成；
+详细最小修改请看 `scripts/prepare_official_client.mjs`。
+Tencent Connect 版权所有者与 MIT 全文仍随压缩包保留。
+本版 CI 不代表 Android 真机 QQ 扫码/界面已通过。
