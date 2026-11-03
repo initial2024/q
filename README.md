@@ -1,4 +1,4 @@
-# Q Mobile · DSH Android QQ Bot · v0.1.2
+# Q Mobile · DSH Android QQ Bot · v0.1.3
 
 > **非官方二次创作 / Unofficial adapter**。官方核心始终来自
 > [Tencent Connect / dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot)
@@ -8,7 +8,7 @@
 ## 直接安装（Android DSH 插件页）
 
 ```text
-https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.2.tgz
+https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.3.tgz
 ```
 
 **此 URL 只有在 main CI 完成并且 dist 文件实际存在后才可用。**
@@ -31,7 +31,7 @@ https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1
 
 1. 在 DSH 插件页安装并启用该 TGZ，重启 DSH Web/Node 运行时。
 2. 在 DSH **设置 → QQ 机器人** 打开官方扫码/手动绑定页面。
-   v0.1.2 的安装包已包含完整官方客户端 UI，并补齐 `dsh.client`；
+   v0.1.3 的安装包已包含完整官方客户端 UI，并补齐 `dsh.client`；
    客户端包 ID 与详情匹配包名经过适配，顶层 UI 依赖为空，
    必须等 `slots` 服务就绪后才能注册设置页，桌面侧栏服务可缺省。
    该策略避免 QQ UI 阻断整个 DSH Web 启动。
@@ -41,12 +41,15 @@ https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1
    **官方 AppID/AppSecret**，通过 DSH 的**本地可信配置入口**填写，
    或在当前 profile 的 `cordis.patch.yml` 的 `im-qqbot` 配置项填写。
    **不要把密钥提交到本 GitHub 仓库**。
-4. 首装时 `access.c2cMode=allowlist` 且名单为空，群聊为 disabled，
-   所以**绑定后仍可能不响应消息**。应从官方已认证的机器人账号
+4. 首装时 `access.c2cMode=allowlist` 且名单为空，**群聊为 open 且只有 @ 才触发回复**。
+   私聊需从官方已认证的机器人账号
    得到你的 QQ 用户 OpenID 并加入 `access.c2cAllow`；通过官方扫码
    流程绑定成功时，官方插件可能自动设置首个用户白名单。
-5. 明确希望群聊开放后，按官方文档调整 `groupMode` / `groupAllow`；
-   切勿默认授权陌生群或所有陌生私聊。
+5. **已安装过旧版并完成绑定的用户注意：**升级程序不会重置你的
+   `cordis.patch.yml`。旧版 `groupMode: disabled` 仍会禁止全部群消息。
+   请在「设置 → QQ 机器人 → 服务范围 → 群聊」选择「所有人」并保存；
+   如果只想回复指定群，选择「白名单」并填写群 OpenID（不是 QQ 群号）。
+   保持「群聊仅回复 @机器人的消息」开启，避免普通群消息唤起模型。
 6. 若你的 DSH Android 不支持官方客户端席位，可改用 DSH 本地配置；
    **不部署额外公网扫码服务、不托管凭据、不绕过权限**。
 
@@ -64,7 +67,7 @@ node bin/q-mobile-doctor.mjs
 ## 安全默认配置（相较官方）
 
 - 私聊：`allowlist`，空列表默认全部拒绝。
-- 群聊：`disabled`，需要你显式开启。
+- 群聊：新安装默认为 `open` + `requireMention=true`，只接收官方授权群的 @ 消息；旧版用户配置不会被迁移或覆盖。
 - 富媒体、视觉处理：默认关闭。
 - 文件发送：路径白名单开启，自动投递关闭。
 - 并发队列：`maxQueue=3`。
@@ -91,7 +94,7 @@ WebSocket 断线重连、后台保活、聊天上下文、视觉发送、扫码
 原创软件核心版权所有 Tencent Connect、MIT 许可。
 Q Mobile 不是官方发布，遵守 QQ 开放平台协议与使用限制。
 
-## v0.1.2 修复记录：设置与二维码入口
+## v0.1.3 修复记录：设置与二维码入口
 
 旧版 v0.1.0 仅有 Node 服务端代理，缺少 `./client` 导出、
 `dsh.client.platform=web` 元数据和浏览器客户端模块，导致设置页没有 QQ
@@ -103,7 +106,7 @@ Q Mobile 不是官方发布，遵守 QQ 开放平台协议与使用限制。
 **若 Android 宿主本身不提供 `slots` 接口，仍可能无法显示；请反馈
 设置界面和插件详情页截图进行宿主侧兼容排查。**
 
-## v0.1.2：Web boot 卡在 loading 的修复及安全恢复
+## v0.1.3：Web boot 卡在 loading 的修复及安全恢复
 
 ### 识别问题
 
@@ -131,7 +134,7 @@ Android 宿主若迟于插件提供此服务，Cordis 将在 web boot 保持
 1. 优先使用 DSH 的**救援模式或 rescue 配置**进入可用界面；
 2. 在插件管理中**只禁用** `dsh-qqbot-q-mobile`，保留原配置
    和凭据。不要删除整个 `.dsh` 或清空应用数据；
-3. 确认主页面恢复后，更新本插件到 v0.1.2，彻底重启
+3. 确认主页面恢复后，更新本插件到 v0.1.3，彻底重启
    DSH 引擎与 WebView；
 4. 查看「设置 → QQ 机器人」及插件详情的「设置」按钮；
 5. 若仍显示 `loading`，先回到 rescue/禁用，不要反复重装 DSH。
@@ -141,3 +144,29 @@ Android 宿主若迟于插件提供此服务，Cordis 将在 web boot 保持
 **保留退出路径：** 若 Android 宿主实际缺少 `slots`，本版应允许
 DSH 先进入主界面，但 QQ 设置页可能要等服务可用后才出现。
 不能保证任意 DSH 发行版自动具有官方 UI 所需的全部槽位。
+
+## v0.1.3：群聊 @ 无回复修复
+
+**原因已经从源码核对：** v0.1.2 默认模板给官方插件传
+`access.groupMode=disabled`，而官方中间件在 `mentionGate`
+前先执行 `accessPolicy`，导致群里即使正常 @ 机器人也被拒绝，
+与私聊能否调用模型无关。
+
+**修复：**仅改变本适配层的**首次安装默认配置**
+`access.groupMode=open`，同时强制保留 `requireMention=true`。
+`access.groupAllow=[]` 只在 `groupMode=allowlist` 时生效。
+官方 SDK、群事件处理、白名单逻辑、登录、消息协议及模型路由未修改。
+
+**不能自动覆盖现有用户配置：**官方扫码绑定写入的私聊白名单
+和用户自选的群访问策略必须保留。旧版已经安装的手机需要在
+QQ 机器人设置页手动选择「群聊 → 所有人」或指定群「白名单」，
+保存后由官方插件按原流程重载，不需要删除旧 QQ 凭据。
+如果仍无回复，优先向机器人发送**真正的 QQ @** + `/bot-ping`，
+并检查腾讯官方机器人后台是否已批准该群的群事件/权限。
+
+完整操作、场景区分和回退说明：
+[docs/GROUP_CHAT.md](docs/GROUP_CHAT.md)。
+
+**重要：**`open` 只意味着此官方 Bot 所在群组无需额外本地白名单，
+并不允许跨群加入或跳过 QQ 平台的机器人授权。想最小化群内数据
+处理范围可改回 `allowlist` 并明确指定群 OpenID。

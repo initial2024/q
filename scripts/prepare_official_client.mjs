@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Q Mobile v0.1.2 nonblocking browser integration of OFFICIAL QQ Bot UI.
+ * Q Mobile v0.1.3 nonblocking browser integration of OFFICIAL QQ Bot UI.
  *
  * Upstream @tencent-connect/dsh-qqbot@0.5.5 (MIT, © 2026 Tencent Connect).
  * Reuses official QR / AppID / secret binding UI, API routes and CSRF logic.
@@ -98,7 +98,7 @@ if(code.includes('@tencent-connect/dsh-qqbot'))
   throw Error('UNPATCHED_CLIENT_ID');
 const copyright=[
   '/*',
-  ' * Q Mobile v0.1.2: nonblocking Android DSH client integration.',
+  ' * Q Mobile v0.1.3: nonblocking Android DSH client integration.',
   ' * Official @tencent-connect/dsh-qqbot@0.5.5 client (MIT).',
   ' * Copyright (c) 2026 Tencent Connect.',
   ' * Unmodified QR, auth, API routes and QQ protocol.',
@@ -111,7 +111,7 @@ const license=fs.readFileSync('node_modules/@tencent-connect/dsh-qqbot/LICENSE',
 if(!license.includes('MIT License')||!license.includes('Copyright (c) 2026 Tencent Connect'))
   throw Error('UPSTREAM_MIT_LICENSE_MISMATCH');
 fs.writeFileSync('THIRD_PARTY_LICENSE_TENCENT.txt',license,'utf8');
-console.log('Q_MOBILE_VERSION=0.1.2');
+console.log('Q_MOBILE_VERSION=0.1.3');
 console.log('WEB_BOOT_REQUIRED_SERVICES=NONE');
 console.log('SETTINGS=DEFERRED_SCOPED_SLOTS');
 console.log('SIDEBAR=OPTIONAL_SCOPED');

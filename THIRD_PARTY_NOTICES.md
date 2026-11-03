@@ -64,3 +64,13 @@ AppID/AppSecret 持久化、SDK、消息发送、限流和安全规则。这个�
 详细最小修改请看 `scripts/prepare_official_client.mjs`。
 Tencent Connect 版权所有者与 MIT 全文仍随压缩包保留。
 本版 CI 不代表 Android 真机 QQ 扫码/界面已通过。
+
+## v0.1.3 群聊访问默认值修正
+
+本二次创作修复此前自己的错误默认值：`groupMode` 从 `disabled`
+恢复到腾讯官方 0.5.5 支持的 `open`，同时保留群聊必须通过
+`@bot` 门控和 QQ 官方群权限。**此变更仅作用于首次创建的模板配置，
+不会修改已绑定用户的数据、白名单或凭据**。已安装用户可以使用
+官方 QQ Bot UI 显式选择「群聊 → 所有人」或「白名单」。
+官方 Tencent Connect SDK、身份验证、群消息中间件顺序和协议完全未改。
+本修改不保证 QQ 平台一定允许机器人接收指定群消息。

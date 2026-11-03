@@ -1,7 +1,7 @@
 {
   "name": "dsh-qqbot-q-mobile",
-  "version": "0.1.2",
-  "description": "Unofficial Android DSH QQ bot wrapping Tencent official 0.5.5 with nonblocking deferred QR/settings UI",
+  "version": "0.1.3",
+  "description": "Unofficial Android DSH QQ Bot frontend with official 0.5.5 core, group mention support and safe persisted-settings migration guidance.",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
@@ -46,7 +46,7 @@
       "dshReleases": {
         "0.2.0-rc.2": "compatible"
       },
-      "note": "No required frontend dependencies at Web boot; official QR/settings UI registers using scoped slots fiber, sidebar optionally. QQ SDK and auth unchanged; Android E2E pending."
+      "note": "Official QQ 0.5.5 SDK unchanged; default group access open on authorized joined groups with requireMention=true. Existing disabled group access persists until explicitly changed by the user. Web boot remains nonblocking and no auth/QQ protocol patched."
     },
     "client": {
       "platform": "web",
