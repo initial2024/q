@@ -1,0 +1,43 @@
+# Q Mobile 0.1.0 — unofficial Android packaging only.
+# Official channel implementation: @tencent-connect/dsh-qqbot@0.5.5
+# https://github.com/tencent-connect/dsh-qqbot
+#
+# Critical: preserve id "im-qqbot" (official persistence/HMR contract).
+# The name below resolves this wrapper; its JS delegates to official plugin.
+# Do NOT enable this wrapper together with official bundle in one DSH profile.
+#
+# Credentials are NEVER committed. Official env fallback:
+#   QQBOT_APPID and QQBOT_SECRET, or use official binding flow if available.
+# In single-phone Android use, manual AppID/AppSecret entry is an option.
+#
+# Conservative first-install behavior:
+# - No QQ messages allowed until explicitly authorized
+# - Groups disabled until user explicitly enables them
+# - No media downloads or file delivery by default
+# - No provider/model override, inherit the host's supported configuration
+- insert:
+    - id: im-qqbot
+      name: dsh-qqbot-q-mobile
+      config:
+        appId: __FROM_ENV__
+        appSecret: __FROM_ENV__
+        requireMention: true
+        access:
+          c2cMode: allowlist
+          c2cAllow: []
+          groupMode: disabled
+          groupAllow: []
+        media:
+          enabled: false
+          maxMB: 16
+          ttlHours: 24
+        vision:
+          enabled: false
+        sendFile:
+          restrictPaths: true
+          extraRoots: []
+          sendPresentedFiles: false
+          maxFiles: 1
+        maxQueue: 3
+        textChunkLimit: 4500
+        debug: false
