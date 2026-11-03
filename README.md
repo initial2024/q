@@ -1,4 +1,4 @@
-# Q Mobile · DSH Android QQ Bot · v0.1.0
+# Q Mobile · DSH Android QQ Bot · v0.1.1
 
 > **非官方二次创作 / Unofficial adapter**。官方核心始终来自
 > [Tencent Connect / dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot)
@@ -8,7 +8,7 @@
 ## 直接安装（Android DSH 插件页）
 
 ```text
-https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.0.tgz
+https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.1.tgz
 ```
 
 **此 URL 只有在 main CI 完成并且 dist 文件实际存在后才可用。**
@@ -30,8 +30,11 @@ https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1
 ### 手机端绑定（单机优先）
 
 1. 在 DSH 插件页安装并启用该 TGZ，重启 DSH Web/Node 运行时。
-2. 优先尝试官方插件的 QQ Bot 设置面板；**本外壳未改造官方客户端
-   UI，不能保证在 Android DSH 一定显示**。
+2. 在 DSH **设置 → QQ 机器人** 打开官方扫码/手动绑定页面。
+   v0.1.1 的安装包已包含完整官方客户端 UI，并补齐 `dsh.client`；
+   只对客户端模块 ID、插件详情匹配包名和桌面侧栏可选依赖作最小调整。
+   如果你的 DSH Android 不提供 `slots` 设置席位，该入口仍会受宿主限制。
+   重启 DSH WebView/前端后检查该栏目与插件详情页「设置」按钮。
 3. 如果手机上无法扫描自己屏幕上的二维码，使用 QQ Bot 平台提供的
    **官方 AppID/AppSecret**，通过 DSH 的**本地可信配置入口**填写，
    或在当前 profile 的 `cordis.patch.yml` 的 `im-qqbot` 配置项填写。
@@ -65,15 +68,17 @@ node bin/q-mobile-doctor.mjs
 - 并发队列：`maxQueue=3`。
 - 模型与 provider：直接继承当前 DSH，无自定义传输。
 
-配置文件为 `cordis.patch.yml`；此文件与官方 `im-qqbot` 行 ID
-兼容，但包名为 `dsh-qqbot-q-mobile`。官方 0.5.5 内置客户端
-绑定面板以**官方包名**识别当前插件详情页，所以本外壳
-**不保证官方设置按钮在本包详情页显示**；本阶段的手机可用性
-以手工本地 AppID/Secret 配置为主，不伪称已经实机扫码验收。
+配置文件为 `cordis.patch.yml`，保留官方 `im-qqbot` 行 ID。
+插件客户端沿用官方 `settings.section`、绑定路由、设置页及二维码组件，
+并把插件详情匹配名称改为 `dsh-qqbot-q-mobile`。
+这能恢复客户端入口的注册；**真实 Android 上的可见性仍需验收**，
+不能把 CI 的客户端注册模拟测试当成手机 UI 通过。
 
 ## 测试与发布边界
 
 GitHub Actions 检查官方 npm 0.5.5 精确依赖、插件代理入口、
+**从官方包确定性生成的客户端 UI**（登录和扫码逻辑原样保留）、
+settings.section / 详情页注册和客户端打包、
 安全默认值、代码与包完整性及 `.tgz` 发布。真实手机 QQ 连接、
 WebSocket 断线重连、后台保活、聊天上下文、视觉发送、扫码
 界面仍需要使用者的 Android DSH 环境验证，**不能从 CI 推断**。
@@ -83,3 +88,15 @@ WebSocket 断线重连、后台保活、聊天上下文、视觉发送、扫码
 详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
 原创软件核心版权所有 Tencent Connect、MIT 许可。
 Q Mobile 不是官方发布，遵守 QQ 开放平台协议与使用限制。
+
+## v0.1.1 修复记录：设置与二维码入口
+
+旧版 v0.1.0 仅有 Node 服务端代理，缺少 `./client` 导出、
+`dsh.client.platform=web` 元数据和浏览器客户端模块，导致设置页没有 QQ
+机器人入口。本版在打包阶段从官方固定版本 0.5.5 的
+`lib/client.js` 生成对应客户端文件，并在压缩包内保留
+`THIRD_PARTY_LICENSE_TENCENT.txt`（腾讯原版 MIT License）。
+没有修改任何官方扫码路由、用户认证、白名单或 QQ SDK。
+具体三项最小变更见 `scripts/prepare_official_client.mjs`。
+**若 Android 宿主本身不提供 `slots` 接口，仍可能无法显示；请反馈
+设置界面和插件详情页截图进行宿主侧兼容排查。**
