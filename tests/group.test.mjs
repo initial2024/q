@@ -32,7 +32,7 @@ test('official Tencent QQ SDK, group policy and authentication are delegated unc
 
 test('update will not silently migrate pre-existing group policy or touch saved QQ credentials',()=>{
   const instructions=read('docs/GROUP_CHAT.md');
-  assert.match(instructions,/groupMode=disabled/);
+  assert.match(instructions,/access[.]groupMode.*disabled/);
   assert.match(instructions,/不.*覆.*既有|不会强行覆盖|不会重置/);
   assert.match(instructions,/group OpenID/);
   assert.match(instructions,/bot-ping/);
