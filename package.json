@@ -1,22 +1,25 @@
 {
   "name": "dsh-qqbot-q-mobile",
-  "version": "0.1.0",
-  "description": "Unofficial Android DSH installation wrapper around Tencent Connect's official QQ Bot plugin 0.5.5; official transport and auth untouched.",
+  "version": "0.1.1",
+  "description": "Unofficial Android DSH wrapper delegating official Tencent QQ Bot 0.5.5, including its QR binding and settings UI.",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./client": "./lib/client.js"
   },
   "bin": {
     "q-mobile-doctor": "./bin/q-mobile-doctor.mjs"
   },
   "files": [
     "lib/index.js",
+    "lib/client.js",
     "bin/q-mobile-doctor.mjs",
     "cordis.patch.yml",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_LICENSE_TENCENT.txt",
     "LICENSE"
   ],
   "engines": {
@@ -43,7 +46,10 @@
       "dshReleases": {
         "0.2.0-rc.2": "compatible"
       },
-      "note": "Wrapper based on official 0.5.5 API; static tests only. Android DSH end-to-end binding has not been verified."
+      "note": "Includes adapted official 0.5.5 client UI; only loader id, details subject match, and optional desktop-only sidebar injection adapted for Android. Android UI real-device E2E pending."
+    },
+    "client": {
+      "platform": "web"
     }
   },
   "dependencies": {
