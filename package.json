@@ -1,7 +1,7 @@
 {
   "name": "dsh-qqbot-q-mobile",
-  "version": "0.1.1",
-  "description": "Unofficial Android DSH wrapper delegating official Tencent QQ Bot 0.5.5, including its QR binding and settings UI.",
+  "version": "0.1.2",
+  "description": "Unofficial Android DSH QQ bot wrapping Tencent official 0.5.5 with nonblocking deferred QR/settings UI",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
@@ -46,10 +46,11 @@
       "dshReleases": {
         "0.2.0-rc.2": "compatible"
       },
-      "note": "Includes adapted official 0.5.5 client UI; only loader id, details subject match, and optional desktop-only sidebar injection adapted for Android. Android UI real-device E2E pending."
+      "note": "No required frontend dependencies at Web boot; official QR/settings UI registers using scoped slots fiber, sidebar optionally. QQ SDK and auth unchanged; Android E2E pending."
     },
     "client": {
-      "platform": "web"
+      "platform": "web",
+      "inject": []
     }
   },
   "dependencies": {

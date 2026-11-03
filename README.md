@@ -1,4 +1,4 @@
-# Q Mobile · DSH Android QQ Bot · v0.1.1
+# Q Mobile · DSH Android QQ Bot · v0.1.2
 
 > **非官方二次创作 / Unofficial adapter**。官方核心始终来自
 > [Tencent Connect / dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot)
@@ -8,7 +8,7 @@
 ## 直接安装（Android DSH 插件页）
 
 ```text
-https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.1.tgz
+https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1.2.tgz
 ```
 
 **此 URL 只有在 main CI 完成并且 dist 文件实际存在后才可用。**
@@ -31,8 +31,10 @@ https://raw.githubusercontent.com/initial2024/q/main/dist/dsh-qqbot-q-mobile-0.1
 
 1. 在 DSH 插件页安装并启用该 TGZ，重启 DSH Web/Node 运行时。
 2. 在 DSH **设置 → QQ 机器人** 打开官方扫码/手动绑定页面。
-   v0.1.1 的安装包已包含完整官方客户端 UI，并补齐 `dsh.client`；
-   只对客户端模块 ID、插件详情匹配包名和桌面侧栏可选依赖作最小调整。
+   v0.1.2 的安装包已包含完整官方客户端 UI，并补齐 `dsh.client`；
+   客户端包 ID 与详情匹配包名经过适配，顶层 UI 依赖为空，
+   必须等 `slots` 服务就绪后才能注册设置页，桌面侧栏服务可缺省。
+   该策略避免 QQ UI 阻断整个 DSH Web 启动。
    如果你的 DSH Android 不提供 `slots` 设置席位，该入口仍会受宿主限制。
    重启 DSH WebView/前端后检查该栏目与插件详情页「设置」按钮。
 3. 如果手机上无法扫描自己屏幕上的二维码，使用 QQ Bot 平台提供的
@@ -89,7 +91,7 @@ WebSocket 断线重连、后台保活、聊天上下文、视觉发送、扫码
 原创软件核心版权所有 Tencent Connect、MIT 许可。
 Q Mobile 不是官方发布，遵守 QQ 开放平台协议与使用限制。
 
-## v0.1.1 修复记录：设置与二维码入口
+## v0.1.2 修复记录：设置与二维码入口
 
 旧版 v0.1.0 仅有 Node 服务端代理，缺少 `./client` 导出、
 `dsh.client.platform=web` 元数据和浏览器客户端模块，导致设置页没有 QQ
@@ -100,3 +102,42 @@ Q Mobile 不是官方发布，遵守 QQ 开放平台协议与使用限制。
 具体三项最小变更见 `scripts/prepare_official_client.mjs`。
 **若 Android 宿主本身不提供 `slots` 接口，仍可能无法显示；请反馈
 设置界面和插件详情页截图进行宿主侧兼容排查。**
+
+## v0.1.2：Web boot 卡在 loading 的修复及安全恢复
+
+### 识别问题
+
+若屏幕显示 `HARNESS / Failed to load plugins /`
+`dsh-qqbot-q-mobile: loading`，这是**浏览器插件启动门禁**，
+不是 QQ SDK、二维码失效或 Android Shizuku/root 权限问题。
+
+v0.1.1 错误地把 `slots` 设为浏览器客户端**顶层必需服务**；
+Android 宿主若迟于插件提供此服务，Cordis 将在 web boot 保持
+`loading`，进而拒绝加载主界面。
+
+### 本版源码修复
+
+- `package.json`: `dsh.client.inject=[]`；
+- 官方客户端导出 `inject=[]`，不等待桌面 UI 席位；
+- `apply(ctx)` 使用 `ctx.inject(["slots"], (scope) => ...)`，
+  只在服务实际存在时注册官方二维码/手动绑定设置页；
+- 侧栏在 `sidebarRight` 与 `sidebarRightTabs` 都具备时才注册；
+- 组件异常被隔离，不让 QQ UI 导致整个 APP 无法打开；
+- 官方 `/qqbot/im-qqbot/*` 路由、腾讯身份认证、凭据保存和 SDK
+  均未修改。
+
+### 手机上已卡死的恢复方法
+
+1. 优先使用 DSH 的**救援模式或 rescue 配置**进入可用界面；
+2. 在插件管理中**只禁用** `dsh-qqbot-q-mobile`，保留原配置
+   和凭据。不要删除整个 `.dsh` 或清空应用数据；
+3. 确认主页面恢复后，更新本插件到 v0.1.2，彻底重启
+   DSH 引擎与 WebView；
+4. 查看「设置 → QQ 机器人」及插件详情的「设置」按钮；
+5. 若仍显示 `loading`，先回到 rescue/禁用，不要反复重装 DSH。
+   反馈修复后的 Web boot 画面及脱敏日志；本版不会将 CI
+   的模拟测试冒充成真实 Android UI 验收。
+
+**保留退出路径：** 若 Android 宿主实际缺少 `slots`，本版应允许
+DSH 先进入主界面，但 QQ 设置页可能要等服务可用后才出现。
+不能保证任意 DSH 发行版自动具有官方 UI 所需的全部槽位。
