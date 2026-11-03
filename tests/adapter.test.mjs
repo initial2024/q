@@ -31,7 +31,7 @@ test('safe mobile first boot, no embedded credential, no shadow QQ row',()=>{
   assert.match(patch,/id: im-qqbot/);
   assert.match(patch,/name: dsh-qqbot-q-mobile/);
   assert.match(patch,/c2cMode: allowlist/);
-  assert.match(patch,/groupMode: disabled/);
+  assert.match(patch,/groupMode: open/);
   assert.match(patch,/requireMention: true/);
   assert.match(patch,/restrictPaths: true/);
   assert.match(patch,/maxQueue: 3/);

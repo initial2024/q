@@ -1,4 +1,4 @@
-# Q Mobile 0.1.0 — unofficial Android packaging only.
+# Q Mobile 0.1.3 — unofficial Android packaging only.
 # Official channel implementation: @tencent-connect/dsh-qqbot@0.5.5
 # https://github.com/tencent-connect/dsh-qqbot
 #
@@ -12,7 +12,13 @@
 #
 # Conservative first-install behavior:
 # - No QQ messages allowed until explicitly authorized
-# - Groups disabled until user explicitly enables them
+# - Groups enabled in rooms which the QQ platform has authorized the bot to join,
+#   but group messages must explicitly @ the bot (requireMention=true).
+# - Existing installed profiles are NOT overwritten by this package update;
+#   if groupMode was already disabled, the user must change it in the official
+#   QQ 机器人 > 服务范围 > 群聊 settings.
+# - Use groupMode: allowlist + groupAllow: [actual group OpenID] for strict
+#   room-level restriction. Never place credentials in this public file.
 # - No media downloads or file delivery by default
 # - No provider/model override, inherit the host's supported configuration
 - insert:
@@ -25,7 +31,7 @@
         access:
           c2cMode: allowlist
           c2cAllow: []
-          groupMode: disabled
+          groupMode: open
           groupAllow: []
         media:
           enabled: false
